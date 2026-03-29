@@ -11,6 +11,7 @@ console.log("createAvailability:", createAvailability);
 console.log("getAvailability:", getAvailability);
 
 router.post("/availability", createAvailability);
+// Supports ?date=YYYY-MM-DD
 router.get("/availability/:eventId", getAvailability);
 
 module.exports = router;

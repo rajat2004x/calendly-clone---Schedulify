@@ -1,3 +1,23 @@
+// GET EVENT BY USERNAME AND SLUG
+const User = require("../models/User");
+exports.getEventByUsernameAndSlug = async (req, res) => {
+  try {
+    const { username, eventSlug } = req.params;
+    // Find user by username
+    const user = await User.findOne({ where: { name: username } });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    // Find event by slug (and optionally userId if you have that relation)
+    const event = await Event.findOne({ where: { slug: eventSlug } });
+    if (!event) {
+      return res.status(404).json({ error: "Event not found" });
+    }
+    res.json(event);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
 const { sendBookingConfirmation } = require("../utils/emailService");
 const Event = require("../models/eventModel");
 

@@ -4,6 +4,9 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 import Header from "./components/Header";
 import HomePage from "./pages/HomePage";
+import LandingPage from "./pages/LandingPage";
+import UserDashboard from "./pages/UserDashboard";
+import DummyBookingPage from "./pages/DummyBookingPage";
 import EventSetupPage from "./pages/EventSetupPage";
 import BookingPage from "./pages/BookingPage";
 import DashboardPage from "./pages/DashboardPage";
@@ -36,12 +39,18 @@ function App() {
 
         <main className="flex-1">
           <Routes>
-            <Route path="/" element={<HomePage />} />
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/home" element={<HomePage />} />
             <Route path="/events" element={<EventSetupPage />} />
-            <Route path="/book/:eventSlug" element={<BookingPage />} />
             <Route path="/dashboard" element={<DashboardPage />} />
-
-            {/* ✅ ADD HERE (INSIDE ROUTES) */}
+            <Route path="/user-dashboard" element={<UserDashboard />} />
+            {/* Dummy event booking */}
+            <Route path="/book/dummy/:eventSlug" element={<DummyBookingPage />} />
+            {/* Real event booking (by id) */}
+            <Route path="/book/real/:eventSlug" element={<BookingPage />} />
+            {/* Legacy route for direct slug */}
+            <Route path="/book/:eventSlug" element={<BookingPage />} />
+            {/* Creator dashboard preview (optional) */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
           </Routes>

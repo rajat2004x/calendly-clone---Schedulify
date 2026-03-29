@@ -1,23 +1,21 @@
+
 import { useState, useEffect, useCallback, memo } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import { Clock, User, Mail, Calendar, Globe } from "lucide-react";
-import {
-  getUserTimezone,
-  getAvailabilitySettings,
-  isAvailableOnDay,
-  filterSlotsByAvailability,
-} from "../utils/timezoneUtils";
 
 const SlotsGrid = memo(function SlotsGrid({ slots, onSelectSlot, selectedSlot }) {
   return (
     <div className="grid grid-cols-3 gap-3">
       {slots.map((slot) => (
         <button
-          key={slot.id || `${slot.start}-${slot.end}`}
+          key={slot.start + '-' + slot.end}
           onClick={() => onSelectSlot(slot)}
+          disabled={!slot.available}
           className={`py-3 px-4 rounded-lg border-2 font-medium transition ${
-            selectedSlot?.start === slot.start
+            !slot.available
+              ? "border-slate-200 text-slate-400 bg-slate-100 cursor-not-allowed"
+              : selectedSlot?.start === slot.start
               ? "border-blue-600 bg-blue-50 text-blue-600"
               : "border-slate-300 text-slate-700 hover:border-blue-400 hover:bg-blue-50"
           }`}
@@ -29,22 +27,20 @@ const SlotsGrid = memo(function SlotsGrid({ slots, onSelectSlot, selectedSlot })
   );
 });
 
+
 function BookingPage() {
-  const { eventSlug } = useParams();
+  const { username, eventSlug } = useParams();
   const [event, setEvent] = useState(null);
-  const currentDate = new Date();
   const [selectedDate, setSelectedDate] = useState("");
   const [slots, setSlots] = useState([]);
   const [selectedSlot, setSelectedSlot] = useState(null);
-  const [visitorTimezone, setVisitorTimezone] = useState(getUserTimezone());
-  const [availability, setAvailability] = useState(null);
-  const [bookingData, setBookingData] = useState({
-    name: "",
-    email: "",
-    guest_notes: "",
-  });
+  const [visitorTimezone, setVisitorTimezone] = useState("");
+  const [bookingData, setBookingData] = useState({ name: "", email: "", guest_notes: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
+  const [loadingEvent, setLoadingEvent] = useState(true);
+  const [loadingSlots, setLoadingSlots] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
   // Detect visitor's timezone on mount
   useEffect(() => {
@@ -52,62 +48,50 @@ function BookingPage() {
       const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
       setVisitorTimezone(tz);
     } catch {
-      console.log("Could not detect timezone, using default");
+      setVisitorTimezone("UTC");
     }
   }, []);
 
   // Fetch event details
   useEffect(() => {
     const fetchEvent = async () => {
+      setLoadingEvent(true);
+      setErrorMsg("");
       try {
-        const res = await axios.get(
-          `http://localhost:5000/api/events?slug=${eventSlug}`
-        );
+        const res = await axios.get(`/api/events/${username}/${eventSlug}`);
         setEvent(res.data);
-        
-        // Load availability settings for this event
-        const eventAvailability = getAvailabilitySettings(res.data.id);
-        setAvailability(eventAvailability);
-      } catch (error) {
-        console.error("Event not found:", error);
+      } catch {
+        setErrorMsg("Event not found");
+      } finally {
+        setLoadingEvent(false);
       }
     };
-    fetchEvent();
-  }, [eventSlug]);
+    if (username && eventSlug) fetchEvent();
+  }, [username, eventSlug]);
 
-  // Fetch slots when date changes
-  const fetchSlots = async (date) => {
-    if (!event) return;
-    
-    // Check if date is available based on working hours
-    if (availability && !isAvailableOnDay(date, availability)) {
-      setSlots([]);
-      setSelectedSlot(null);
-      return;
-    }
-    
+  // Fetch slots for selected date
+  const fetchSlots = useCallback(async (dateStr) => {
+    if (!event || !dateStr) return;
+    setLoadingSlots(true);
+    setSlots([]);
+    setSelectedSlot(null);
     try {
-      const res = await axios.get(
-        `http://localhost:5000/api/slots?eventId=${event.id}&date=${date}`
-      );
-      
-      // Filter slots based on availability settings
-      const filteredSlots = filterSlotsByAvailability(
-        res.data || [],
-        date,
-        availability
-      );
-      setSlots(filteredSlots);
-      setSelectedSlot(null);
-    } catch (error) {
-      console.error("Error fetching slots:", error);
+      const res = await axios.get(`/api/availability/${event.id}?date=${dateStr}`);
+      setSlots(res.data || []);
+    } catch {
       setSlots([]);
+    } finally {
+      setLoadingSlots(false);
     }
-  };
+  }, [event]);
+
+  // When date changes, fetch slots
+  useEffect(() => {
+    if (selectedDate) fetchSlots(selectedDate);
+  }, [selectedDate, fetchSlots]);
 
   const handleDateSelect = (dateStr) => {
     setSelectedDate(dateStr);
-    fetchSlots(dateStr);
   };
 
   const handleSelectSlot = useCallback((slot) => {
@@ -116,13 +100,13 @@ function BookingPage() {
 
   const handleBooking = async () => {
     if (!bookingData.name.trim() || !bookingData.email.trim()) {
-      alert("Please fill in all fields");
+      setErrorMsg("Please fill in all fields");
       return;
     }
-
     setIsSubmitting(true);
+    setErrorMsg("");
     try {
-      await axios.post("http://localhost:5000/api/bookings", {
+      await axios.post("/api/bookings", {
         event_id: event.id,
         date: selectedDate,
         start_time: selectedSlot.start,
@@ -131,7 +115,6 @@ function BookingPage() {
         email: bookingData.email,
         guest_notes: bookingData.guest_notes || "",
       });
-
       setBookingSuccess(true);
       setTimeout(() => {
         setBookingSuccess(false);
@@ -139,14 +122,14 @@ function BookingPage() {
         setBookingData({ name: "", email: "", guest_notes: "" });
       }, 3000);
     } catch (error) {
-      console.error("Booking error:", error);
-      alert("Failed to confirm booking");
+      setErrorMsg(error?.response?.data?.error || "Failed to confirm booking");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (!event) {
+
+  if (loadingEvent) {
     return (
       <main className="max-w-4xl mx-auto px-6 py-12">
         <div className="text-center">
@@ -155,8 +138,20 @@ function BookingPage() {
       </main>
     );
   }
+  if (errorMsg) {
+    return (
+      <main className="max-w-4xl mx-auto px-6 py-12">
+        <div className="text-center">
+          <p className="text-red-600">{errorMsg}</p>
+        </div>
+      </main>
+    );
+  }
+  if (!event) return null;
+
 
   // Get available dates (next 30 days)
+  const currentDate = new Date();
   const availableDates = [];
   for (let i = 0; i < 30; i++) {
     const date = new Date(currentDate);
@@ -279,7 +274,9 @@ function BookingPage() {
                   <h3 className="text-lg font-semibold text-slate-900 mb-4">
                     Available times
                   </h3>
-                  {slots.length > 0 ? (
+                  {loadingSlots ? (
+                    <p className="text-slate-600 text-center py-8">Loading slots...</p>
+                  ) : slots.length > 0 ? (
                     <SlotsGrid
                       slots={slots}
                       onSelectSlot={handleSelectSlot}
@@ -446,6 +443,9 @@ function BookingPage() {
                       </div>
                     )}
 
+                    {errorMsg && (
+                      <div className="text-red-600 text-sm mb-2">{errorMsg}</div>
+                    )}
                     <button
                       onClick={handleBooking}
                       disabled={isSubmitting}

@@ -12,8 +12,10 @@ function AvailabilitySettings({ eventId }) {
     { day: "saturday", startTime: "", endTime: "", enabled: false },
     { day: "sunday", startTime: "", endTime: "", enabled: false },
   ]);
-
   const [timezone, setTimezone] = useState("Asia/Kolkata");
+  // Date-specific overrides
+  const [dateOverrides, setDateOverrides] = useState([]); // [{date: '2026-04-01', startTime: '10:00', endTime: '14:00'}]
+  const [newOverride, setNewOverride] = useState({ date: "", startTime: "09:00", endTime: "17:00" });
 
   const days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
   
@@ -55,11 +57,21 @@ function AvailabilitySettings({ eventId }) {
     // Save to localStorage for now, in production would save to backend
     localStorage.setItem(
       `availability-${eventId}`,
-      JSON.stringify({ availability, timezone })
+      JSON.stringify({ availability, timezone, dateOverrides })
     );
     localStorage.setItem("userTimezone", timezone);
     alert("Availability settings saved!");
     setShowModal(false);
+  };
+
+  const handleAddOverride = () => {
+    if (!newOverride.date) return;
+    setDateOverrides([...dateOverrides, newOverride]);
+    setNewOverride({ date: "", startTime: "09:00", endTime: "17:00" });
+  };
+
+  const handleRemoveOverride = (date) => {
+    setDateOverrides(dateOverrides.filter((o) => o.date !== date));
   };
 
   return (
@@ -114,6 +126,7 @@ function AvailabilitySettings({ eventId }) {
                 Working Hours
               </h3>
 
+
               {days.map((day) => {
                 const slot = availability.find((s) => s.day === day);
                 return (
@@ -134,7 +147,6 @@ function AvailabilitySettings({ eventId }) {
                           {day}
                         </span>
                       </div>
-
                       {/* Time Inputs */}
                       {slot.enabled ? (
                         <div className="flex items-center gap-2">
@@ -165,19 +177,60 @@ function AvailabilitySettings({ eventId }) {
                   </div>
                 );
               })}
-            </div>
 
-            {/* Action Buttons */}
-            <div className="flex gap-3 mt-8 pt-6 border-t border-slate-200">
+              {/* Date-specific overrides */}
+              <div className="mt-8">
+                <h4 className="font-semibold mb-2 text-slate-800">Date-Specific Hours (Overrides)</h4>
+                <div className="flex flex-col sm:flex-row gap-2 mb-2">
+                  <input
+                    type="date"
+                    value={newOverride.date}
+                    onChange={e => setNewOverride({ ...newOverride, date: e.target.value })}
+                    className="border px-2 py-1 rounded"
+                  />
+                  <input
+                    type="time"
+                    value={newOverride.startTime}
+                    onChange={e => setNewOverride({ ...newOverride, startTime: e.target.value })}
+                    className="border px-2 py-1 rounded"
+                  />
+                  <input
+                    type="time"
+                    value={newOverride.endTime}
+                    onChange={e => setNewOverride({ ...newOverride, endTime: e.target.value })}
+                    className="border px-2 py-1 rounded"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddOverride}
+                    className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
+                  >
+                    Add
+                  </button>
+                </div>
+                {dateOverrides.length > 0 && (
+                  <div className="space-y-2">
+                    {dateOverrides.map((o) => (
+                      <div key={o.date} className="flex items-center gap-2 text-sm">
+                        <span className="font-mono">{o.date}</span>
+                        <span>{o.startTime} - {o.endTime}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveOverride(o.date)}
+                          className="text-red-500 hover:underline"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <button
-                onClick={() => setShowModal(false)}
-                className="flex-1 px-4 py-3 bg-slate-200 text-slate-900 rounded-lg font-semibold hover:bg-slate-300 transition"
-              >
-                Cancel
-              </button>
-              <button
+                type="button"
                 onClick={handleSave}
-                className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition"
+                className="mt-6 w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 font-semibold"
               >
                 Save Availability
               </button>

@@ -6,7 +6,7 @@ const { sendBookingConfirmation, sendBookingCancellation } = require("../utils/e
 // CREATE BOOKING
 const createBooking = async (req, res) => {
   try {
-    const { event_type_id, event_id, date, start_time, end_time, name } = req.body;
+    const { event_type_id, event_id, date, start_time, end_time, name, email, guest_notes } = req.body;
     const eventId = event_id || event_type_id;
 
     const bufferMinutes = 15;
@@ -64,7 +64,8 @@ const createBooking = async (req, res) => {
       start_time,
       end_time,
       name,
-     email: req.user.email,
+      email,
+      guest_notes,
     });
 
     // Fetch event name to include in confirmation email
@@ -139,6 +140,16 @@ const cancelBooking = async (req, res) => {
 
     booking.status = "cancelled";
     await booking.save();
+
+    // Send cancellation email
+    try {
+      const event = await Event.findByPk(booking.event_id || booking.event_type_id);
+      if (event) {
+        await sendBookingCancellation(booking, event.name);
+      }
+    } catch (emailError) {
+      console.warn("Cancellation email failed, but booking was cancelled:", emailError.message);
+    }
 
     res.json({ message: "Booking cancelled" });
 

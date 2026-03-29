@@ -6,13 +6,13 @@ const nodemailer = require("nodemailer");
 
 
 // ✅ REAL EMAIL TRANSPORTER
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: "rajat2004x@gmail.com",       
-    pass: "lxetgclsljkbfeec",          
-  },
-});
+//const transporter = nodemailer.createTransport({
+  //service: //"gmail",
+  //auth: {
+    //user: //"rajat2004x@gmail.com",       
+    //pass: "lxetgclsljkbfeec",          
+  //},
+//});
 
 const sendBookingConfirmation = async (booking, eventName) => {
   const mailOptions = {

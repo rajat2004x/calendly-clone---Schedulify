@@ -25,8 +25,8 @@ const Event = sequelize.define("Event", {
   },
   custom_questions: {
     type: DataTypes.JSON,
-    defaultValue: [],
-    comment: "Array of custom questions for booking form",
+    allowNull: true,
+    comment: "Array of custom invitee questions",
   },
 });
 
