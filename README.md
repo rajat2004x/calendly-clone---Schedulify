@@ -173,6 +173,7 @@ This project is open-source and available under the MIT License.
 
 
 ##  Screenshots
+<img width="838" height="942" alt="image" src="https://github.com/user-attachments/assets/0a1212f8-ea4f-4f8a-9ad2-bbab8f3ad02c" />
 
 
   <img width="1919" height="1199" alt="Screenshot 2026-03-29 175201" src="https://github.com/user-attachments/assets/9604a698-a7d2-4bc1-ba2e-f4d6c8296bbd" />
