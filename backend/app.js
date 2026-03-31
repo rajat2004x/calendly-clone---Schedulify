@@ -1,5 +1,7 @@
 const express = require("express");
 const cors = require("cors");
+const helmet = require("helmet");
+const { notFoundHandler, globalErrorHandler } = require("./middleware/errorHandler");
 
 // Ensure models are registered for associations.
 require("./models/eventModel");
@@ -14,8 +16,12 @@ const authRoutes = require("./routes/authRoutes");
 
 const app = express();
 
-app.use(cors());
+const allowedOrigin = process.env.CLIENT_URL || "*";
+
+app.use(helmet());
+app.use(cors({ origin: allowedOrigin }));
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 app.use("/api/auth", authRoutes);
 app.use("/api", bookingRoutes);
@@ -28,11 +34,10 @@ app.get("/api/test", (req, res) => {
 });
 
 app.get("/", (req, res) => {
-  res.send("API Running");
+  res.send("Backend is running 🚀");
 });
 
-app.use((req, res) => {
-  res.status(404).json({ error: `Route not found: ${req.method} ${req.path}` });
-});
+app.use(notFoundHandler);
+app.use(globalErrorHandler);
 
 module.exports = app;

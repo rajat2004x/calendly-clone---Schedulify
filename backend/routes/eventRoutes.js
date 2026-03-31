@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const asyncHandler = require("../middleware/asyncHandler");
 
 
 const {
@@ -12,12 +13,12 @@ const {
 } = require("../controllers/eventController");
 
 
-router.post("/events", createEvent);
-router.get("/events", getEvents);
+router.post("/events", asyncHandler(createEvent));
+router.get("/events", asyncHandler(getEvents));
 // Public event fetch by username and slug (must be before :id)
-router.get("/events/:username/:eventSlug", getEventByUsernameAndSlug);
-router.get("/events/:id", getEventById);
-router.put("/events/:id", updateEvent);
-router.delete("/events/:id", deleteEvent);
+router.get("/events/:username/:eventSlug", asyncHandler(getEventByUsernameAndSlug));
+router.get("/events/:id", asyncHandler(getEventById));
+router.put("/events/:id", asyncHandler(updateEvent));
+router.delete("/events/:id", asyncHandler(deleteEvent));
 
 module.exports = router;

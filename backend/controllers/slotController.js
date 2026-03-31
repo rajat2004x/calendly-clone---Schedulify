@@ -25,10 +25,6 @@ exports.getAvailableSlots = async (req, res) => {
       },
     });
 
-    // ✅ Debug logs (inside function only)
-    console.log("Day:", day);
-    console.log("Availability:", availability);
-
     if (!availability) {
       return res.json([]);
     }
@@ -57,7 +53,6 @@ exports.getAvailableSlots = async (req, res) => {
     res.json(slots);
 
   } catch (error) {
-    console.error("Slot error:", error);
     res.status(500).json({ error: error.message });
   }
 };

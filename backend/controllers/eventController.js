@@ -1,5 +1,7 @@
-// GET EVENT BY USERNAME AND SLUG
 const User = require("../models/User");
+const Event = require("../models/eventModel");
+
+// GET EVENT BY USERNAME AND SLUG
 exports.getEventByUsernameAndSlug = async (req, res) => {
   try {
     const { username, eventSlug } = req.params;
@@ -18,9 +20,6 @@ exports.getEventByUsernameAndSlug = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-const { sendBookingConfirmation } = require("../utils/emailService");
-const Event = require("../models/eventModel");
-
 // CREATE EVENT
 exports.createEvent = async (req, res) => {
   try {
@@ -34,23 +33,6 @@ exports.createEvent = async (req, res) => {
       description: description || null,
       slug,
     });
-
-    // ✅ SEND EMAIL AFTER EVENT CREATION
-    try {
-      await sendBookingConfirmation(
-        {
-          name: "Rajat", // change later if needed
-          email: "rajat2004x@gmail.com", // 👈 YOUR EMAIL
-          date: new Date(),
-          start_time: "N/A",
-          end_time: "N/A",
-        },
-        event.name
-      );
-      console.log("📧 Event creation email sent");
-    } catch (emailError) {
-      console.log("❌ Email failed:", emailError.message);
-    }
 
     res.json(event);
 
@@ -98,11 +80,9 @@ exports.getEventById = async (req, res) => {
 exports.deleteEvent = async (req, res) => {
   try {
     const { id } = req.params;
-    console.log(`🗑️  DELETE EVENT REQUEST - ID: ${id}`);
     
     const event = await Event.findByPk(id);
     if (!event) {
-      console.log(`❌ Event not found with ID: ${id}`);
       return res.status(404).json({ error: "Event not found" });
     }
 
@@ -110,22 +90,17 @@ exports.deleteEvent = async (req, res) => {
     const Booking = require("../models/bookingModel");
     const Availability = require("../models/availabilityModel");
     
-    console.log(`📋 Deleting bookings for event ${id}...`);
     // Delete bookings (use both event_id and event_type_id for safety)
     await Booking.destroy({ where: { event_id: id } });
     await Booking.destroy({ where: { event_type_id: id } });
     
-    console.log(`⏰ Deleting availability for event ${id}...`);
     // Delete availability (uses event_type_id)
     await Availability.destroy({ where: { event_type_id: id } });
     
-    console.log(`🔥 Deleting event ${id}...`);
     // Then delete the event
     await event.destroy();
-    console.log(`✅ Event ${id} deleted successfully!`);
     res.json({ message: "Event deleted successfully" });
   } catch (error) {
-    console.error(`❌ Error deleting event:`, error);
     res.status(500).json({ error: error.message });
   }
 };
