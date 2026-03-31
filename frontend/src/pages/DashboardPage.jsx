@@ -132,19 +132,23 @@ function DashboardPage() {
     }
   };
 
+  const todayStrFilter = new Date().toISOString().slice(0, 10);
+
   const filteredBookings = bookings.filter((booking) => {
     if (filter === "upcoming") {
-      return new Date(booking.date) >= new Date();
+      return booking.date >= todayStrFilter;
     }
     if (filter === "past") {
-      return new Date(booking.date) < new Date();
+      return booking.date < todayStrFilter;
     }
     return true;
   });
 
+  const todayStr = new Date().toISOString().slice(0, 10);
+
   const stats = {
     total: bookings.length,
-    upcoming: bookings.filter((b) => new Date(b.date) >= new Date()).length,
+    upcoming: bookings.filter((b) => b.date >= todayStr).length,
     totalEvents: events.length,
   };
 
@@ -288,9 +292,12 @@ function DashboardPage() {
                 </div>
               ) : (
                 filteredBookings.map((booking, idx) => {
-                  const event = events.find((e) => e.id === booking.event_id);
-                  const bookingDate = new Date(booking.date);
-                  const isUpcoming = bookingDate >= new Date();
+                  const event = events.find(
+                    (e) => e.id === (booking.event_id || booking.event_type_id)
+                  );
+                  const todayStrLocal = new Date().toISOString().slice(0, 10);
+                  const isUpcoming = booking.date >= todayStrLocal;
+                  const bookingDate = new Date(booking.date + "T12:00:00");
 
                   return (
                     <div
@@ -455,10 +462,13 @@ function DashboardPage() {
 
             {(() => {
               const event = events.find(
-                (e) => e.id === selectedBooking.event_id
+                (e) =>
+                  e.id ===
+                  (selectedBooking.event_id || selectedBooking.event_type_id)
               );
-              const bookingDate = new Date(selectedBooking.date);
-              const isUpcoming = bookingDate >= new Date();
+              const todayStrModal = new Date().toISOString().slice(0, 10);
+              const isUpcoming = selectedBooking.date >= todayStrModal;
+              const bookingDate = new Date(selectedBooking.date + "T12:00:00");
 
               return (
                 <div className="space-y-6">
