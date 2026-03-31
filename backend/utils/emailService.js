@@ -1,18 +1,27 @@
 const nodemailer = require("nodemailer");
+require("dotenv").config();
 
 // Configure your email service here
 // For testing, we'll use a mock transporter
 // For production, use Gmail, SendGrid, or other SMTP service
 
+const hasSmtpConfig =
+  process.env.SMTP_HOST &&
+  process.env.SMTP_PORT &&
+  process.env.SMTP_USER &&
+  process.env.SMTP_PASS;
 
-// ✅ REAL EMAIL TRANSPORTER
-//const transporter = nodemailer.createTransport({
-  //service: //"gmail",
-  //auth: {
-    //user: //"rajat2004x@gmail.com",       
-    //pass: "lxetgclsljkbfeec",          
-  //},
-//});
+const transporter = hasSmtpConfig
+  ? nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT),
+      secure: process.env.SMTP_SECURE === "true",
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    })
+  : null;
 
 const sendBookingConfirmation = async (booking, eventName) => {
   const mailOptions = {
@@ -93,6 +102,10 @@ const sendBookingConfirmation = async (booking, eventName) => {
   };
 
   try {
+    if (!transporter) {
+      console.log("[Email skipped] SMTP not configured. Confirmation not sent.");
+      return true;
+    }
     await transporter.sendMail(mailOptions);
     console.log(`✅ Confirmation email sent to ${booking.email}`);
     return true;
@@ -161,6 +174,10 @@ const sendBookingCancellation = async (booking, eventName) => {
   };
 
   try {
+    if (!transporter) {
+      console.log("[Email skipped] SMTP not configured. Cancellation not sent.");
+      return true;
+    }
     await transporter.sendMail(mailOptions);
     console.log(`✅ Cancellation email sent to ${booking.email}`);
     return true;
