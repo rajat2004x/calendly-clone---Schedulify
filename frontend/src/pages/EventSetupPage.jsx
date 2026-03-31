@@ -23,7 +23,7 @@ function EventSetupPage() {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/events");
+        const res = await axios.get("/api/events");
         setEvents(res.data || []);
       } catch (error) {
         console.error("Error fetching events:", error);
@@ -41,7 +41,7 @@ function EventSetupPage() {
 
     try {
       const slug = formData.name.toLowerCase().replace(/\s+/g, "-");
-      const res = await axios.post("http://localhost:5000/api/events", {
+      const res = await axios.post("/api/events", {
         ...formData,
         slug,
       });
@@ -64,7 +64,7 @@ function EventSetupPage() {
     setDeletingId(id);
     try {
       console.log("Calling DELETE /api/events/" + id);
-      const response = await axios.delete(`http://localhost:5000/api/events/${id}`);
+      const response = await axios.delete(`/api/events/${id}`);
       console.log("Delete response:", response);
       setEvents(events.filter((e) => e.id !== id));
       alert("Event deleted successfully!");
@@ -98,7 +98,7 @@ function EventSetupPage() {
 
     try {
       const response = await axios.put(
-        `http://localhost:5000/api/events/${editingId}`,
+        `/api/events/${editingId}`,
         editFormData
       );
       setEvents(events.map((e) => (e.id === editingId ? response.data : e)));

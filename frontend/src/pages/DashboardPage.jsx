@@ -37,8 +37,8 @@ function DashboardPage() {
     setLoading(true);
     try {
       const [bookingsRes, eventsRes] = await Promise.all([
-        axios.get("http://localhost:5000/api/bookings"),
-        axios.get("http://localhost:5000/api/events"),
+        axios.get("/api/bookings"),
+        axios.get("/api/events"),
       ]);
 
       setBookings(bookingsRes.data || []);
@@ -56,9 +56,7 @@ function DashboardPage() {
 
     setDeleting(id);
     try {
-      const response = await axios.delete(
-        `http://localhost:5000/api/bookings/${id}`
-      );
+      const response = await axios.delete(`/api/bookings/${id}`);
       console.log("Delete response:", response.data);
 
       // Refresh the bookings list
@@ -87,7 +85,7 @@ function DashboardPage() {
 
     try {
       const res = await axios.get(
-        `http://localhost:5000/api/slots?eventId=${rescheduling.event_id}&date=${newDate}`
+        `/api/slots?eventId=${rescheduling.event_id}&date=${newDate}`
       );
       setAvailableSlots(res.data || []);
       setSelectedNewSlot(null);
@@ -106,10 +104,8 @@ function DashboardPage() {
     setReschedulingLoading(true);
     try {
       // Delete old booking and create new one
-      await axios.delete(
-        `http://localhost:5000/api/bookings/${rescheduling.id}`
-      );
-      await axios.post("http://localhost:5000/api/bookings", {
+      await axios.delete(`/api/bookings/${rescheduling.id}`);
+      await axios.post("/api/bookings", {
         event_id: rescheduling.event_id,
         date: newDate,
         start_time: selectedNewSlot.start,

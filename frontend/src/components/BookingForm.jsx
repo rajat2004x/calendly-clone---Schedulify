@@ -8,7 +8,7 @@ const BookingForm = memo(function BookingForm({ slot, date }) {
   const handleBooking = async () => {
     try {
       await axios.post(
-  "http://localhost:5000/api/bookings",
+  "/api/bookings",
   {
     event_type_id: 1,
     date,
